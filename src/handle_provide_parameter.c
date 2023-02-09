@@ -745,23 +745,15 @@ static void handle_match_orders(ethPluginProvideParameter_t *msg, context_t *con
     if (context->tx.body.match_orders.order_side == NO_ORDER) {
         switch (context->next_param) {
             case LEFT_ORDER_OFFSET:
-                context->tx.body.match_orders.left_order_offset =
-                    U2BE(msg->parameter, PARAMETER_LENGTH - 2);
                 context->next_param = LEFT_SIGNATURE_OFFSET;
                 break;
             case LEFT_SIGNATURE_OFFSET:
-                context->tx.body.match_orders.left_signature_offset =
-                    U2BE(msg->parameter, PARAMETER_LENGTH - 2);
                 context->next_param = RIGHT_ORDER_OFFSET;
                 break;
             case RIGHT_ORDER_OFFSET:
-                context->tx.body.match_orders.right_order_offset =
-                    U2BE(msg->parameter, PARAMETER_LENGTH - 2);
                 context->next_param = RIGHT_SIGNATURE_OFFSET;
                 break;
             case RIGHT_SIGNATURE_OFFSET:
-                context->tx.body.match_orders.right_signature_offset =
-                    U2BE(msg->parameter, PARAMETER_LENGTH - 2);
                 context->tx.body.match_orders.order_side = LEFT_ORDER;
                 context->next_param = MAKER;
                 break;
