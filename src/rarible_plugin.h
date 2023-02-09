@@ -189,10 +189,6 @@ typedef struct {
             order_t right;
 
             // For parsing data.
-            uint16_t left_order_offset;
-            uint16_t left_signature_offset;
-            uint16_t right_order_offset;
-            uint16_t right_signature_offset;
             int8_t order_side;
             int8_t taker_or_maker;
         } match_orders;
