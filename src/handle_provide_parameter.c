@@ -47,7 +47,8 @@ static uint8_t parse_asset(ethPluginProvideParameter_t *msg, context_t *context)
 static void parse_order(ethPluginProvideParameter_t *msg,
                         context_t *context,
                         order_t *order,
-                        int8_t next_order) {
+                        int8_t next_order,
+                        bool with_signature) {
     switch (context->next_param) {
         case MAKER:
             copy_address(order->maker.address, msg->parameter, sizeof(order->maker.address));
@@ -98,7 +99,12 @@ static void parse_order(ethPluginProvideParameter_t *msg,
         case DATA:  // wait until reach next field
             context->counter--;
             if (context->counter == 0) {
-                context->next_param = SIGNATURE_LENGTH;
+                if(with_signature){
+                    context->next_param = SIGNATURE_LENGTH;
+                }else {
+                    context->next_param = MAKER;
+                    context->tx.body.match_orders.order_side = next_order;
+                }
             }
             break;
         case SIGNATURE_LENGTH:
@@ -644,7 +650,7 @@ static void handle_cancel(ethPluginProvideParameter_t *msg, context_t *context) 
             context->next_param = MAKER;
             break;
         default:
-            parse_order(msg, context, &(context->tx.body.cancel), ERROR_ORDER);
+            parse_order(msg, context, &(context->tx.body.cancel), ERROR_ORDER, false);
             break;
     }
 }
@@ -674,12 +680,12 @@ static void handle_match_orders(ethPluginProvideParameter_t *msg, context_t *con
     }
 
     if (context->tx.body.match_orders.order_side == LEFT_ORDER) {
-        parse_order(msg, context, &(context->tx.body.match_orders.left), RIGHT_ORDER);
+        parse_order(msg, context, &(context->tx.body.match_orders.left), RIGHT_ORDER, true);
         return;
     }
 
     if (context->tx.body.match_orders.order_side == RIGHT_ORDER) {
-        parse_order(msg, context, &(context->tx.body.match_orders.right), ERROR_ORDER);
+        parse_order(msg, context, &(context->tx.body.match_orders.right), ERROR_ORDER, true);
         return;
     }
 
