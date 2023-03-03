@@ -190,7 +190,6 @@ typedef struct {
 
             // For parsing data.
             int8_t order_side;
-            int8_t taker_or_maker;
         } match_orders;
 
         struct {
@@ -228,7 +227,6 @@ typedef struct {
     // For parsing data.
     uint8_t next_param;  // Set to be the next param we expect to parse.
     uint8_t sub_param;   // Set to be the next param we expect to parse.
-    uint16_t rcv_chunks;
     uint16_t max_counter;
     uint16_t counter;
 
