@@ -213,7 +213,6 @@ static void handle_create_token(ethPluginProvideParameter_t *msg, context_t *con
             break;
         case OPERATORS_QTY:
             context->counter = U2BE(msg->parameter, PARAMETER_LENGTH - 2);
-            context->max_counter = context->counter;
 
             context->next_param = OPERATORS_ADDRESS;
             if (context->counter == 0) {
@@ -221,16 +220,13 @@ static void handle_create_token(ethPluginProvideParameter_t *msg, context_t *con
             }
             break;
         case OPERATORS_ADDRESS:
-            if (context->counter == context->max_counter) {  
+            if (context->counter == 1) {  // Fix creators addresses to only 1, the last one.
                 copy_address(context->tx.body.create_token.operator.address,
                              msg->parameter,
                              sizeof(context->tx.body.create_token.operator));
             }
 
-            context->counter = decrement_counter(context->counter);
-            if (context->counter == 0) {
-                context->next_param = OPERATORS_VALUE;
-            }
+            context->next_param = OPERATORS_VALUE;
             break;
         case OPERATORS_VALUE:
             context->counter = decrement_counter(context->counter);
