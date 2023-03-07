@@ -13,6 +13,13 @@ static uint16_t get_counter(uint16_t counter) {
     }
 }
 
+static uint16_t decrement_counter(uint16_t counter){
+    if(counter > 0){
+        return counter - 1;
+    }
+    return counter;
+}
+
 static uint8_t parse_asset(ethPluginProvideParameter_t *msg, context_t *context) {
     switch (context->sub_param) {
         case ASSET_TYPE_OFFSET:
@@ -32,7 +39,7 @@ static uint8_t parse_asset(ethPluginProvideParameter_t *msg, context_t *context)
             context->sub_param = ASSET_DATA;
             return 0;
         case ASSET_DATA:  // wait until reach next field
-            context->counter--;
+            context->counter = decrement_counter(context->counter);
             if (context->counter == 0) {
                 return 1;
             }
@@ -97,7 +104,7 @@ static void parse_order(ethPluginProvideParameter_t *msg,
             context->next_param = DATA;
             break;
         case DATA:  // wait until reach next field
-            context->counter--;
+            context->counter = decrement_counter(context->counter);
             if (context->counter == 0) {
                 if(with_signature){
                     context->next_param = SIGNATURE_LENGTH;
@@ -112,7 +119,7 @@ static void parse_order(ethPluginProvideParameter_t *msg,
             context->next_param = SIGNATURE;
             break;
         case SIGNATURE:  // wait until reach next field
-            context->counter--;
+            context->counter = decrement_counter(context->counter);
             if (context->counter == 0) {
                 context->next_param = MAKER;
                 context->tx.body.match_orders.order_side = next_order;
@@ -160,7 +167,7 @@ static void handle_create_token(ethPluginProvideParameter_t *msg, context_t *con
                           msg->parameter);
             }
 
-            context->counter--;
+            context->counter = decrement_counter(context->counter);
             if (context->counter == 0) {
                 context->next_param = SYMBOL_LENGTH;
             }
@@ -179,7 +186,7 @@ static void handle_create_token(ethPluginProvideParameter_t *msg, context_t *con
                           msg->parameter);
             }
 
-            context->counter--;
+            context->counter = decrement_counter(context->counter);
             if (context->counter == 0) {
                 context->next_param = BASE_URI_LENGTH;
             }
@@ -189,7 +196,7 @@ static void handle_create_token(ethPluginProvideParameter_t *msg, context_t *con
             context->next_param = BASE_URI;
             break;
         case BASE_URI:  // wait until reach next field
-            context->counter--;
+            context->counter = decrement_counter(context->counter);
             if (context->counter == 0) {
                 context->next_param = CONTRACT_URI_LENGTH;
             }
@@ -199,7 +206,7 @@ static void handle_create_token(ethPluginProvideParameter_t *msg, context_t *con
             context->next_param = CONTRACT_URI;
             break;
         case CONTRACT_URI:  // wait until reach next field
-            context->counter--;
+            context->counter = decrement_counter(context->counter);
             if (context->counter == 0) {
                 context->next_param = OPERATORS_QTY;
             }
@@ -222,7 +229,7 @@ static void handle_create_token(ethPluginProvideParameter_t *msg, context_t *con
             context->next_param = OPERATORS_VALUE;
             break;
         case OPERATORS_VALUE:
-            context->counter--;
+            context->counter = decrement_counter(context->counter);
             if (context->counter != 0) {
                 context->next_param = OPERATORS_ADDRESS;
             } else {
@@ -266,9 +273,15 @@ static void handle_erc721_rarible_init(ethPluginProvideParameter_t *msg, context
         case NAME_LENGTH:
             context->tx.body.erc721_rarible_init.name.len =
                 U2BE(msg->parameter, PARAMETER_LENGTH - 2);
-            context->counter = get_counter(context->tx.body.erc721_rarible_init.name.len);
-            context->max_counter = context->counter;
-            context->next_param = NAME;
+
+            if(context->tx.body.erc721_rarible_init.name.len > 0){
+                context->next_param = NAME;
+                context->counter = get_counter(context->tx.body.erc721_rarible_init.name.len);
+                context->max_counter = context->counter;
+            } else {
+                context->next_param = SYMBOL_LENGTH;
+            }
+
             break;
         case NAME:  // wait until reach next field
             if (context->counter == context->max_counter) {
@@ -278,7 +291,7 @@ static void handle_erc721_rarible_init(ethPluginProvideParameter_t *msg, context
                           msg->parameter);
             }
 
-            context->counter--;
+            context->counter = decrement_counter(context->counter);
             if (context->counter == 0) {
                 context->next_param = SYMBOL_LENGTH;
             }
@@ -286,10 +299,14 @@ static void handle_erc721_rarible_init(ethPluginProvideParameter_t *msg, context
         case SYMBOL_LENGTH:
             context->tx.body.erc721_rarible_init.symbol.len =
                 U2BE(msg->parameter, PARAMETER_LENGTH - 2);
-            context->counter = get_counter(context->tx.body.erc721_rarible_init.symbol.len);
 
-            context->max_counter = context->counter;
-            context->next_param = SYMBOL;
+            if(context->tx.body.erc721_rarible_init.symbol.len > 0) {
+                context->counter = get_counter(context->tx.body.erc721_rarible_init.symbol.len);
+                context->max_counter = context->counter;
+                context->next_param = SYMBOL;
+            } else {
+                context->next_param = BASE_URI_LENGTH;
+            }
             break;
         case SYMBOL:  // wait until reach next field
             if (context->counter == context->max_counter) {
@@ -299,7 +316,7 @@ static void handle_erc721_rarible_init(ethPluginProvideParameter_t *msg, context
                           msg->parameter);
             }
 
-            context->counter--;
+            context->counter = decrement_counter(context->counter);
             if (context->counter == 0) {
                 context->next_param = BASE_URI_LENGTH;
             }
@@ -309,7 +326,7 @@ static void handle_erc721_rarible_init(ethPluginProvideParameter_t *msg, context
             context->next_param = BASE_URI;
             break;
         case BASE_URI:  // wait until reach next field
-            context->counter--;
+            context->counter = decrement_counter(context->counter);
             if (context->counter == 0) {
                 context->next_param = CONTRACT_URI_LENGTH;
             }
@@ -319,7 +336,7 @@ static void handle_erc721_rarible_init(ethPluginProvideParameter_t *msg, context
             context->next_param = CONTRACT_URI;
             break;
         case CONTRACT_URI:  // wait until reach next field
-            context->counter--;
+            context->counter = decrement_counter(context->counter);
             if (context->counter == 0) {
                 context->next_param = UNEXPECTED_PARAMETER;
             }
