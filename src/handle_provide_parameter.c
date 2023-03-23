@@ -15,7 +15,7 @@ static uint16_t get_counter(uint16_t counter) {
 
 static uint16_t decrement_counter(uint16_t counter){
     if(counter > 0){
-        return counter - 1;
+        counter = counter - 1;
     }
     return counter;
 }
@@ -36,10 +36,16 @@ static uint8_t parse_asset(ethPluginProvideParameter_t *msg, context_t *context)
             return 0;
         case ASSET_DATA_LENGTH:
             context->counter = get_counter(U2BE(msg->parameter, PARAMETER_LENGTH - 2));
+            // If there is no data, we are done now.
+            if (context->counter == 0) {
+                return 1;
+            }
+
             context->sub_param = ASSET_DATA;
             return 0;
         case ASSET_DATA:  // wait until reach next field
             context->counter = decrement_counter(context->counter);
+            // Once the entire asset data has been consumed, we are done.
             if (context->counter == 0) {
                 return 1;
             }
