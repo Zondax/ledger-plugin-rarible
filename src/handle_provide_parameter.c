@@ -380,16 +380,16 @@ static void handle_transfer_from_or_mint(ethPluginProvideParameter_t *msg, conte
         case BODY_OFFSET:  // data offset
             context->next_param = BENEFICIARY;
             break;
-        case BENEFICIARY:  // to
-            copy_address(context->tx.body.transfer_from_or_mint.beneficiary.address,
-                         msg->parameter,
-                         sizeof(context->tx.body.transfer_from_or_mint.beneficiary));
-            context->next_param = SELLER;
-            break;
-        case SELLER:  // from
+        case BENEFICIARY:  // from
             copy_address(context->tx.body.transfer_from_or_mint.seller.address,
                          msg->parameter,
                          sizeof(context->tx.body.transfer_from_or_mint.seller));
+            context->next_param = SELLER;
+            break;
+        case SELLER:  // to
+            copy_address(context->tx.body.transfer_from_or_mint.beneficiary.address,
+                         msg->parameter,
+                         sizeof(context->tx.body.transfer_from_or_mint.beneficiary));
             context->next_param = ID;
             break;
         case ID:  // token id
@@ -414,6 +414,9 @@ static void handle_transfer_from_or_mint(ethPluginProvideParameter_t *msg, conte
             context->tx.body.transfer_from_or_mint.uri_length =
                     get_counter(U2BE(msg->parameter, PARAMETER_LENGTH - sizeof(uint16_t)));
             context->next_param = WAIT_UNTIL_CREATORS;
+            if(context->tx.body.transfer_from_or_mint.uri_length == 0){
+                context->next_param = CREATORS_QTY;
+            }
             break;
         case WAIT_UNTIL_CREATORS:  // wait until reach next field
             context->tx.body.transfer_from_or_mint.uri_length--;

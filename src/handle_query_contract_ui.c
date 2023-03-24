@@ -266,10 +266,10 @@ void handle_query_contract_ui(void *parameters) {
                     set_token_id(msg, &context->tx.body.transfer_from_or_mint.id);
                     break;
                 case 1:
-                    set_beneficiary_ui(msg, &context->tx.body.transfer_from_or_mint.beneficiary);
+                    set_seller_ui(msg, &context->tx.body.transfer_from_or_mint.seller);
                     break;
                 case 2:
-                    set_seller_ui(msg, &context->tx.body.transfer_from_or_mint.seller);
+                    set_beneficiary_ui(msg, &context->tx.body.transfer_from_or_mint.beneficiary);
                     break;
                 case 3:
                     set_creator_ui(msg, &context->tx.body.transfer_from_or_mint.creator);
