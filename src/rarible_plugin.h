@@ -133,13 +133,13 @@ typedef struct {
 } order_t;
 
 typedef struct {
-    u_int8_t len;
-    u_int8_t text[NAME_MAX_LEN];
+    u_int16_t len;
+    u_int8_t text[NAME_MAX_LEN + 1];
 } name_t;
 
 typedef struct {
-    u_int8_t len;
-    u_int8_t text[SYMBOL_MAX_LEN];
+    u_int16_t len;
+    u_int8_t text[SYMBOL_MAX_LEN + 1];
 } symbol_t;
 
 typedef struct {

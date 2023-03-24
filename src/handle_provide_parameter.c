@@ -13,6 +13,13 @@ static uint16_t get_counter(uint16_t counter) {
     }
 }
 
+static uint16_t decrement_counter(uint16_t counter){
+    if(counter > 0){
+        counter = counter - 1;
+    }
+    return counter;
+}
+
 static uint8_t parse_asset(ethPluginProvideParameter_t *msg, context_t *context) {
     switch (context->sub_param) {
         case ASSET_TYPE_OFFSET:
@@ -28,11 +35,17 @@ static uint8_t parse_asset(ethPluginProvideParameter_t *msg, context_t *context)
             context->sub_param = ASSET_DATA_LENGTH;
             return 0;
         case ASSET_DATA_LENGTH:
-            context->counter = get_counter(U2BE(msg->parameter, PARAMETER_LENGTH - 2));
+            context->counter = get_counter(U2BE(msg->parameter, PARAMETER_LENGTH - sizeof(uint16_t)));
+            // If there is no data, we are done now.
+            if (context->counter == 0) {
+                return 1;
+            }
+
             context->sub_param = ASSET_DATA;
             return 0;
         case ASSET_DATA:  // wait until reach next field
-            context->counter--;
+            context->counter = decrement_counter(context->counter);
+            // Once the entire asset data has been consumed, we are done.
             if (context->counter == 0) {
                 return 1;
             }
@@ -93,11 +106,11 @@ static void parse_order(ethPluginProvideParameter_t *msg,
             }
             break;
         case DATA_LENGTH:
-            context->counter = get_counter(U2BE(msg->parameter, PARAMETER_LENGTH - 2));
+            context->counter = get_counter(U2BE(msg->parameter, PARAMETER_LENGTH - sizeof(uint16_t)));
             context->next_param = DATA;
             break;
         case DATA:  // wait until reach next field
-            context->counter--;
+            context->counter = decrement_counter(context->counter);
             if (context->counter == 0) {
                 if(with_signature){
                     context->next_param = SIGNATURE_LENGTH;
@@ -108,11 +121,11 @@ static void parse_order(ethPluginProvideParameter_t *msg,
             }
             break;
         case SIGNATURE_LENGTH:
-            context->counter = get_counter(U2BE(msg->parameter, PARAMETER_LENGTH - 2));
+            context->counter = get_counter(U2BE(msg->parameter, PARAMETER_LENGTH - sizeof(uint16_t)));
             context->next_param = SIGNATURE;
             break;
         case SIGNATURE:  // wait until reach next field
-            context->counter--;
+            context->counter = decrement_counter(context->counter);
             if (context->counter == 0) {
                 context->next_param = MAKER;
                 context->tx.body.match_orders.order_side = next_order;
@@ -147,7 +160,7 @@ static void handle_create_token(ethPluginProvideParameter_t *msg, context_t *con
             context->next_param = NAME_LENGTH;
             break;
         case NAME_LENGTH:
-            context->tx.body.create_token.name.len = U2BE(msg->parameter, PARAMETER_LENGTH - 2);
+            context->tx.body.create_token.name.len = U2BE(msg->parameter, PARAMETER_LENGTH - sizeof(uint16_t));
             context->counter = get_counter(context->tx.body.create_token.name.len);
             context->max_counter = context->counter;
             context->next_param = NAME;
@@ -160,13 +173,13 @@ static void handle_create_token(ethPluginProvideParameter_t *msg, context_t *con
                           msg->parameter);
             }
 
-            context->counter--;
+            context->counter = decrement_counter(context->counter);
             if (context->counter == 0) {
                 context->next_param = SYMBOL_LENGTH;
             }
             break;
         case SYMBOL_LENGTH:
-            context->tx.body.create_token.symbol.len = U2BE(msg->parameter, PARAMETER_LENGTH - 2);
+            context->tx.body.create_token.symbol.len = U2BE(msg->parameter, PARAMETER_LENGTH - sizeof(uint16_t));
             context->counter = get_counter(context->tx.body.create_token.symbol.len);
             context->max_counter = context->counter;
             context->next_param = SYMBOL;
@@ -179,33 +192,33 @@ static void handle_create_token(ethPluginProvideParameter_t *msg, context_t *con
                           msg->parameter);
             }
 
-            context->counter--;
+            context->counter = decrement_counter(context->counter);
             if (context->counter == 0) {
                 context->next_param = BASE_URI_LENGTH;
             }
             break;
         case BASE_URI_LENGTH:
-            context->counter = get_counter(U2BE(msg->parameter, PARAMETER_LENGTH - 2));
+            context->counter = get_counter(U2BE(msg->parameter, PARAMETER_LENGTH - sizeof(uint16_t)));
             context->next_param = BASE_URI;
             break;
         case BASE_URI:  // wait until reach next field
-            context->counter--;
+            context->counter = decrement_counter(context->counter);
             if (context->counter == 0) {
                 context->next_param = CONTRACT_URI_LENGTH;
             }
             break;
         case CONTRACT_URI_LENGTH:
-            context->counter = get_counter(U2BE(msg->parameter, PARAMETER_LENGTH - 2));
+            context->counter = get_counter(U2BE(msg->parameter, PARAMETER_LENGTH - sizeof(uint16_t)));
             context->next_param = CONTRACT_URI;
             break;
         case CONTRACT_URI:  // wait until reach next field
-            context->counter--;
+            context->counter = decrement_counter(context->counter);
             if (context->counter == 0) {
                 context->next_param = OPERATORS_QTY;
             }
             break;
         case OPERATORS_QTY:
-            context->counter = U2BE(msg->parameter, PARAMETER_LENGTH - 2);
+            context->counter = U2BE(msg->parameter, PARAMETER_LENGTH - sizeof(uint16_t));
 
             context->next_param = OPERATORS_ADDRESS;
             if (context->counter == 0) {
@@ -222,7 +235,7 @@ static void handle_create_token(ethPluginProvideParameter_t *msg, context_t *con
             context->next_param = OPERATORS_VALUE;
             break;
         case OPERATORS_VALUE:
-            context->counter--;
+            context->counter = decrement_counter(context->counter);
             if (context->counter != 0) {
                 context->next_param = OPERATORS_ADDRESS;
             } else {
@@ -265,10 +278,16 @@ static void handle_erc721_rarible_init(ethPluginProvideParameter_t *msg, context
             break;
         case NAME_LENGTH:
             context->tx.body.erc721_rarible_init.name.len =
-                U2BE(msg->parameter, PARAMETER_LENGTH - 2);
-            context->counter = get_counter(context->tx.body.erc721_rarible_init.name.len);
-            context->max_counter = context->counter;
-            context->next_param = NAME;
+                U2BE(msg->parameter, PARAMETER_LENGTH - sizeof(uint16_t));
+
+            if(context->tx.body.erc721_rarible_init.name.len > 0){
+                context->next_param = NAME;
+                context->counter = get_counter(context->tx.body.erc721_rarible_init.name.len);
+                context->max_counter = context->counter;
+            } else {
+                context->next_param = SYMBOL_LENGTH;
+            }
+
             break;
         case NAME:  // wait until reach next field
             if (context->counter == context->max_counter) {
@@ -278,18 +297,22 @@ static void handle_erc721_rarible_init(ethPluginProvideParameter_t *msg, context
                           msg->parameter);
             }
 
-            context->counter--;
+            context->counter = decrement_counter(context->counter);
             if (context->counter == 0) {
                 context->next_param = SYMBOL_LENGTH;
             }
             break;
         case SYMBOL_LENGTH:
             context->tx.body.erc721_rarible_init.symbol.len =
-                U2BE(msg->parameter, PARAMETER_LENGTH - 2);
-            context->counter = get_counter(context->tx.body.erc721_rarible_init.symbol.len);
+                U2BE(msg->parameter, PARAMETER_LENGTH - sizeof(uint16_t));
 
-            context->max_counter = context->counter;
-            context->next_param = SYMBOL;
+            if(context->tx.body.erc721_rarible_init.symbol.len > 0) {
+                context->counter = get_counter(context->tx.body.erc721_rarible_init.symbol.len);
+                context->max_counter = context->counter;
+                context->next_param = SYMBOL;
+            } else {
+                context->next_param = BASE_URI_LENGTH;
+            }
             break;
         case SYMBOL:  // wait until reach next field
             if (context->counter == context->max_counter) {
@@ -299,27 +322,27 @@ static void handle_erc721_rarible_init(ethPluginProvideParameter_t *msg, context
                           msg->parameter);
             }
 
-            context->counter--;
+            context->counter = decrement_counter(context->counter);
             if (context->counter == 0) {
                 context->next_param = BASE_URI_LENGTH;
             }
             break;
         case BASE_URI_LENGTH:
-            context->counter = get_counter(U2BE(msg->parameter, PARAMETER_LENGTH - 2));
+            context->counter = get_counter(U2BE(msg->parameter, PARAMETER_LENGTH - sizeof(uint16_t)));
             context->next_param = BASE_URI;
             break;
         case BASE_URI:  // wait until reach next field
-            context->counter--;
+            context->counter = decrement_counter(context->counter);
             if (context->counter == 0) {
                 context->next_param = CONTRACT_URI_LENGTH;
             }
             break;
         case CONTRACT_URI_LENGTH:
-            context->counter = get_counter(U2BE(msg->parameter, PARAMETER_LENGTH - 2));
+            context->counter = get_counter(U2BE(msg->parameter, PARAMETER_LENGTH - sizeof(uint16_t)));
             context->next_param = CONTRACT_URI;
             break;
         case CONTRACT_URI:  // wait until reach next field
-            context->counter--;
+            context->counter = decrement_counter(context->counter);
             if (context->counter == 0) {
                 context->next_param = UNEXPECTED_PARAMETER;
             }
@@ -342,7 +365,7 @@ static void handle_set_approved_for_all(ethPluginProvideParameter_t *msg, contex
             break;
         case IS_APPROVED:  // approved
             context->tx.body.set_approval_for_all.isApproved =
-                U2BE(msg->parameter, PARAMETER_LENGTH - 2);
+                U2BE(msg->parameter, PARAMETER_LENGTH - sizeof(uint16_t));
             context->next_param = UNEXPECTED_PARAMETER;
             break;
         // Keep this
@@ -357,16 +380,16 @@ static void handle_transfer_from_or_mint(ethPluginProvideParameter_t *msg, conte
         case BODY_OFFSET:  // data offset
             context->next_param = BENEFICIARY;
             break;
-        case BENEFICIARY:  // to
-            copy_address(context->tx.body.transfer_from_or_mint.beneficiary.address,
-                         msg->parameter,
-                         sizeof(context->tx.body.transfer_from_or_mint.beneficiary));
-            context->next_param = SELLER;
-            break;
-        case SELLER:  // from
+        case BENEFICIARY:  // from
             copy_address(context->tx.body.transfer_from_or_mint.seller.address,
                          msg->parameter,
                          sizeof(context->tx.body.transfer_from_or_mint.seller));
+            context->next_param = SELLER;
+            break;
+        case SELLER:  // to
+            copy_address(context->tx.body.transfer_from_or_mint.beneficiary.address,
+                         msg->parameter,
+                         sizeof(context->tx.body.transfer_from_or_mint.beneficiary));
             context->next_param = ID;
             break;
         case ID:  // token id
@@ -389,8 +412,11 @@ static void handle_transfer_from_or_mint(ethPluginProvideParameter_t *msg, conte
             break;
         case URI_CHUNK_OFFSET:  // uri length
             context->tx.body.transfer_from_or_mint.uri_length =
-                    get_counter(U2BE(msg->parameter, PARAMETER_LENGTH - 2));
+                    get_counter(U2BE(msg->parameter, PARAMETER_LENGTH - sizeof(uint16_t)));
             context->next_param = WAIT_UNTIL_CREATORS;
+            if(context->tx.body.transfer_from_or_mint.uri_length == 0){
+                context->next_param = CREATORS_QTY;
+            }
             break;
         case WAIT_UNTIL_CREATORS:  // wait until reach next field
             context->tx.body.transfer_from_or_mint.uri_length--;
@@ -400,7 +426,7 @@ static void handle_transfer_from_or_mint(ethPluginProvideParameter_t *msg, conte
             break;
         case CREATORS_QTY:
             context->tx.body.transfer_from_or_mint.creators_qty =
-                U2BE(msg->parameter, PARAMETER_LENGTH - 2);
+                U2BE(msg->parameter, PARAMETER_LENGTH - sizeof(uint16_t));
 
             context->next_param = CREATORS_ADDRESS;
             if (context->tx.body.transfer_from_or_mint.creators_qty == 0) {
@@ -427,7 +453,7 @@ static void handle_transfer_from_or_mint(ethPluginProvideParameter_t *msg, conte
             break;
         case ROYALTIES_QTY:
             context->tx.body.transfer_from_or_mint.royalties_qty =
-                U2BE(msg->parameter, PARAMETER_LENGTH - 2);
+                U2BE(msg->parameter, PARAMETER_LENGTH - sizeof(uint16_t));
 
             context->next_param = ROYALTIES_ADDRESS;
             if (context->tx.body.transfer_from_or_mint.royalties_qty == 0) {
@@ -441,7 +467,7 @@ static void handle_transfer_from_or_mint(ethPluginProvideParameter_t *msg, conte
             if (context->tx.body.transfer_from_or_mint.royalties_qty ==
                 1) {  // Fix royalties values to only 1, the last one.
                 context->tx.body.transfer_from_or_mint.royalties =
-                    U2BE(msg->parameter, PARAMETER_LENGTH - 2);
+                    U2BE(msg->parameter, PARAMETER_LENGTH - sizeof(uint16_t));
             }
 
             context->tx.body.transfer_from_or_mint.royalties_qty--;
@@ -455,7 +481,7 @@ static void handle_transfer_from_or_mint(ethPluginProvideParameter_t *msg, conte
         // Signature logic is here, but it is not being used as we don't need to show them.
         case SIGNATURES_QTY:
             context->tx.body.transfer_from_or_mint.signatures_qty =
-                U2BE(msg->parameter, PARAMETER_LENGTH - 2);
+                U2BE(msg->parameter, PARAMETER_LENGTH - sizeof(uint16_t));
             context->tx.body.transfer_from_or_mint.signatures_counter =
                 context->tx.body.transfer_from_or_mint.signatures_qty;
 
@@ -472,7 +498,7 @@ static void handle_transfer_from_or_mint(ethPluginProvideParameter_t *msg, conte
             break;
         case SIGNATURE_LENGTH:
             context->tx.body.transfer_from_or_mint.signature_length =
-                get_counter(U2BE(msg->parameter, PARAMETER_LENGTH - 2));
+                get_counter(U2BE(msg->parameter, PARAMETER_LENGTH - sizeof(uint16_t)));
 
             context->next_param = SIGNATURE;
             break;
@@ -532,7 +558,7 @@ static void handle_mint_and_transfer(ethPluginProvideParameter_t *msg, context_t
             break;
         case URI_CHUNK_OFFSET:  // uri length
             context->tx.body.mint_and_transfer.uri_length =
-                    get_counter(U2BE(msg->parameter, PARAMETER_LENGTH - 2));
+                    get_counter(U2BE(msg->parameter, PARAMETER_LENGTH - sizeof(uint16_t)));
             context->next_param = WAIT_UNTIL_CREATORS;
             break;
         case WAIT_UNTIL_CREATORS:  // wait until reach next field
@@ -543,7 +569,7 @@ static void handle_mint_and_transfer(ethPluginProvideParameter_t *msg, context_t
             break;
         case CREATORS_QTY:
             context->tx.body.mint_and_transfer.creators_qty =
-                U2BE(msg->parameter, PARAMETER_LENGTH - 2);
+                U2BE(msg->parameter, PARAMETER_LENGTH - sizeof(uint16_t));
 
             context->next_param = CREATORS_ADDRESS;
             if (context->tx.body.mint_and_transfer.creators_qty == 0) {
@@ -570,7 +596,7 @@ static void handle_mint_and_transfer(ethPluginProvideParameter_t *msg, context_t
             break;
         case ROYALTIES_QTY:
             context->tx.body.mint_and_transfer.royalties_qty =
-                U2BE(msg->parameter, PARAMETER_LENGTH - 2);
+                U2BE(msg->parameter, PARAMETER_LENGTH - sizeof(uint16_t));
 
             context->next_param = ROYALTIES_ADDRESS;
             if (context->tx.body.mint_and_transfer.royalties_qty == 0) {
@@ -584,7 +610,7 @@ static void handle_mint_and_transfer(ethPluginProvideParameter_t *msg, context_t
             if (context->tx.body.mint_and_transfer.royalties_qty ==
                 1) {  // Fix royalties values to only 1, the last one.
                 context->tx.body.mint_and_transfer.royalties =
-                    U2BE(msg->parameter, PARAMETER_LENGTH - 2);
+                    U2BE(msg->parameter, PARAMETER_LENGTH - sizeof(uint16_t));
             }
 
             context->tx.body.mint_and_transfer.royalties_qty--;
@@ -598,7 +624,7 @@ static void handle_mint_and_transfer(ethPluginProvideParameter_t *msg, context_t
         // Signature logic is here, but it is not being used as we don't need to show them.
         case SIGNATURES_QTY:
             context->tx.body.mint_and_transfer.signatures_qty =
-                U2BE(msg->parameter, PARAMETER_LENGTH - 2);
+                U2BE(msg->parameter, PARAMETER_LENGTH - sizeof(uint16_t));
             context->tx.body.mint_and_transfer.signatures_counter =
                 context->tx.body.mint_and_transfer.signatures_qty;
 
@@ -615,7 +641,7 @@ static void handle_mint_and_transfer(ethPluginProvideParameter_t *msg, context_t
             break;
         case SIGNATURE_LENGTH:
             context->tx.body.mint_and_transfer.signature_length =
-                get_counter(U2BE(msg->parameter, PARAMETER_LENGTH - 2));
+                get_counter(U2BE(msg->parameter, PARAMETER_LENGTH - sizeof(uint16_t)));
 
             context->next_param = SIGNATURE;
             break;
