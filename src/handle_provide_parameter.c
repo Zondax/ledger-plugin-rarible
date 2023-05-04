@@ -253,19 +253,16 @@ static void handle_create_token(ethPluginProvideParameter_t *msg, context_t *con
             }
             break;
         case OPERATORS_ADDRESS:
-            if (context->counter == 1) {  // Fix creators addresses to only 1, the last one.
+            // Fix creators addresses to only 1, the last one.
+            if (context->counter == 1) {
+                context->tx.body.create_token.operator_found = true;
                 copy_address(context->tx.body.create_token.operator.address,
                              msg->parameter,
                              sizeof(context->tx.body.create_token.operator));
             }
 
-            context->next_param = OPERATORS_VALUE;
-            break;
-        case OPERATORS_VALUE:
             context->counter = decrement_counter(context->counter);
-            if (context->counter != 0) {
-                context->next_param = OPERATORS_ADDRESS;
-            } else {
+            if (context->counter == 0) {
                 context->next_param = UNEXPECTED_PARAMETER;
             }
             break;

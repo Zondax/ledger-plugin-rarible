@@ -111,7 +111,6 @@ typedef enum {
     CONTRACT_URI,
     OPERATORS_QTY,
     OPERATORS_ADDRESS,
-    OPERATORS_VALUE,
 
     TRANSFER_PROXY_ADDRESS,
     LAZY_TRANSFER_PROXY_ADDRESS,
@@ -204,6 +203,7 @@ typedef struct {
 
         struct {
             // For display.
+            bool operator_found;
             address_t operator;
             name_t name;
             symbol_t symbol;

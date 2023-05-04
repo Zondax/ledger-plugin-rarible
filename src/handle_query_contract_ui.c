@@ -78,6 +78,11 @@ static void set_operator_ui(ethQueryContractUI_t *msg, address_t *operator) {
     set_address_ui(msg, operator);
 }
 
+static void set_no_operator_ui(ethQueryContractUI_t *msg) {
+    strlcpy(msg->title, "Operator", msg->titleLength);
+    strlcpy(msg->msg, "No Operators", msg->msgLength);
+}
+
 // Set UI for "Transfer Proxy" screen.
 static void set_transfer_proxy_ui(ethQueryContractUI_t *msg, address_t *address) {
     strlcpy(msg->title, "Transfer", msg->titleLength);
@@ -326,7 +331,11 @@ void handle_query_contract_ui(void *parameters) {
                     set_symbol_ui(msg, &context->tx.body.create_token.symbol);
                     break;
                 case 2:
-                    set_operator_ui(msg, &context->tx.body.create_token.operator);
+                    if(context->tx.body.create_token.operator_found){
+                        set_operator_ui(msg, &context->tx.body.create_token.operator);
+                    } else {
+                        set_no_operator_ui(msg);
+                    }
                     break;
                 default:
                     PRINTF("Received an invalid screenIndex\n");
