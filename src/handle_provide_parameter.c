@@ -115,8 +115,12 @@ static void parse_order(ethPluginProvideParameter_t *msg,
                 if(with_signature){
                     context->next_param = SIGNATURE_LENGTH;
                 }else {
-                    context->next_param = MAKER;
                     context->tx.body.match_orders.order_side = next_order;
+                    if( next_order == ERROR_ORDER ){
+                        context->next_param = UNEXPECTED_PARAMETER;
+                    } else {
+                        context->next_param = MAKER;
+                    }
                 }
             }
             break;
@@ -127,8 +131,12 @@ static void parse_order(ethPluginProvideParameter_t *msg,
         case SIGNATURE:  // wait until reach next field
             context->counter = decrement_counter(context->counter);
             if (context->counter == 0) {
-                context->next_param = MAKER;
                 context->tx.body.match_orders.order_side = next_order;
+                if( next_order == ERROR_ORDER ){
+                    context->next_param = UNEXPECTED_PARAMETER;
+                } else {
+                    context->next_param = MAKER;
+                }
             }
             break;
 
