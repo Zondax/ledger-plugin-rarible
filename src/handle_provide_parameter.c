@@ -577,8 +577,9 @@ static void handle_mint_and_transfer(ethPluginProvideParameter_t *msg, context_t
             }
             break;
         case CREATORS_ADDRESS:
-            if (context->tx.body.mint_and_transfer.creators_qty ==
-                1) {  // Fix creators addresses to only 1, the last one.
+            // Fix creators addresses to only 1, the last one.
+            if (context->tx.body.mint_and_transfer.creators_qty == 1) {
+                context->tx.body.mint_and_transfer.creator_found = true;
                 copy_address(context->tx.body.mint_and_transfer.creator.address,
                              msg->parameter,
                              sizeof(context->tx.body.mint_and_transfer.creator));

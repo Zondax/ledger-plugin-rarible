@@ -58,6 +58,12 @@ static void set_creator_ui(ethQueryContractUI_t *msg, address_t *creator) {
     set_address_ui(msg, creator);
 }
 
+// Set UI for empty "Creator" screen.
+static void set_no_creator_ui(ethQueryContractUI_t *msg) {
+    strlcpy(msg->title, "Creator", msg->titleLength);
+    strlcpy(msg->msg, "No Creators", msg->msgLength);
+}
+
 // Set UI for "To" screen.
 static void set_to_ui(ethQueryContractUI_t *msg, address_t *address) {
     strlcpy(msg->title, "To", msg->titleLength);
@@ -208,7 +214,11 @@ void handle_query_contract_ui(void *parameters) {
                     set_beneficiary_ui(msg, &context->tx.body.mint_and_transfer.beneficiary);
                     break;
                 case 2:
-                    set_creator_ui(msg, &context->tx.body.mint_and_transfer.creator);
+                    if(context->tx.body.mint_and_transfer.creator_found) {
+                        set_creator_ui(msg, &context->tx.body.mint_and_transfer.creator);
+                    } else {
+                        set_no_creator_ui(msg);
+                    }
                     break;
                 case 3:
                     set_royalties_ui(msg, context->tx.body.mint_and_transfer.royalties);

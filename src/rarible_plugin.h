@@ -150,6 +150,7 @@ typedef struct {
             // For display.
             token_id_t id;
             address_t beneficiary;
+            bool creator_found;
             address_t creator;
             uint16_t royalties;
             // uint8_t signature[PARAMETER_LENGTH];
