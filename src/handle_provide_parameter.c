@@ -161,9 +161,15 @@ static void handle_create_token(ethPluginProvideParameter_t *msg, context_t *con
             break;
         case NAME_LENGTH:
             context->tx.body.create_token.name.len = U2BE(msg->parameter, PARAMETER_LENGTH - sizeof(uint16_t));
-            context->counter = get_counter(context->tx.body.create_token.name.len);
-            context->max_counter = context->counter;
-            context->next_param = NAME;
+
+            if(context->tx.body.create_token.name.len > 0){
+                context->counter = get_counter(context->tx.body.create_token.name.len);
+                context->max_counter = context->counter;
+                context->next_param = NAME;
+            } else {
+                context->next_param = SYMBOL_LENGTH;
+            }
+
             break;
         case NAME:  // wait until reach next field
             if (context->counter == context->max_counter) {
@@ -180,9 +186,14 @@ static void handle_create_token(ethPluginProvideParameter_t *msg, context_t *con
             break;
         case SYMBOL_LENGTH:
             context->tx.body.create_token.symbol.len = U2BE(msg->parameter, PARAMETER_LENGTH - sizeof(uint16_t));
-            context->counter = get_counter(context->tx.body.create_token.symbol.len);
-            context->max_counter = context->counter;
-            context->next_param = SYMBOL;
+
+            if(context->tx.body.create_token.symbol.len > 0){
+                context->counter = get_counter(context->tx.body.create_token.symbol.len);
+                context->max_counter = context->counter;
+                context->next_param = SYMBOL;
+            } else {
+                context->next_param = BASE_URI_LENGTH;
+            }
             break;
         case SYMBOL:  // wait until reach next field
             if (context->counter == context->max_counter) {
@@ -200,6 +211,10 @@ static void handle_create_token(ethPluginProvideParameter_t *msg, context_t *con
         case BASE_URI_LENGTH:
             context->counter = get_counter(U2BE(msg->parameter, PARAMETER_LENGTH - sizeof(uint16_t)));
             context->next_param = BASE_URI;
+
+            if(context->counter == 0){
+                context->next_param = CONTRACT_URI_LENGTH;
+            }
             break;
         case BASE_URI:  // wait until reach next field
             context->counter = decrement_counter(context->counter);
@@ -210,6 +225,10 @@ static void handle_create_token(ethPluginProvideParameter_t *msg, context_t *con
         case CONTRACT_URI_LENGTH:
             context->counter = get_counter(U2BE(msg->parameter, PARAMETER_LENGTH - sizeof(uint16_t)));
             context->next_param = CONTRACT_URI;
+
+            if(context->counter == 0){
+                context->next_param = OPERATORS_QTY;
+            }
             break;
         case CONTRACT_URI:  // wait until reach next field
             context->counter = decrement_counter(context->counter);
@@ -330,6 +349,10 @@ static void handle_erc721_rarible_init(ethPluginProvideParameter_t *msg, context
         case BASE_URI_LENGTH:
             context->counter = get_counter(U2BE(msg->parameter, PARAMETER_LENGTH - sizeof(uint16_t)));
             context->next_param = BASE_URI;
+
+            if (context->counter == 0) {
+                context->next_param = CONTRACT_URI_LENGTH;
+            }
             break;
         case BASE_URI:  // wait until reach next field
             context->counter = decrement_counter(context->counter);
@@ -340,6 +363,10 @@ static void handle_erc721_rarible_init(ethPluginProvideParameter_t *msg, context
         case CONTRACT_URI_LENGTH:
             context->counter = get_counter(U2BE(msg->parameter, PARAMETER_LENGTH - sizeof(uint16_t)));
             context->next_param = CONTRACT_URI;
+
+            if (context->counter == 0) {
+                context->next_param = UNEXPECTED_PARAMETER;
+            }
             break;
         case CONTRACT_URI:  // wait until reach next field
             context->counter = decrement_counter(context->counter);
