@@ -127,17 +127,19 @@ static void set_signature_ui(ethQueryContractUI_t *msg, context_t *context) {
 static void set_royalties_ui(ethQueryContractUI_t *msg, uint16_t royalties) {
     strlcpy(msg->title, "Royalties", msg->titleLength);
 
-    if (royalties < 9) {
+    if (royalties <= 9) {
         snprintf(msg->msg, msg->msgLength, "0.0%d%%", royalties);
-    } else if (royalties < 99) {
+    } else if (royalties <= 99) {
         snprintf(msg->msg, msg->msgLength, "0.%d%%", royalties);
-    } else {
+    } else if (royalties <= 10000){
         u_int8_t decimal = royalties % 100;
-        if (decimal < 9) {
+        if (decimal <= 9) {
             snprintf(msg->msg, msg->msgLength, "%d.0%d%%", royalties / 100, decimal);
         } else {
             snprintf(msg->msg, msg->msgLength, "%d.%d%%", royalties / 100, decimal);
         }
+    } else {
+        snprintf(msg->msg, msg->msgLength, "-");
     }
 }
 

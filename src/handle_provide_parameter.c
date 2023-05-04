@@ -607,10 +607,16 @@ static void handle_mint_and_transfer(ethPluginProvideParameter_t *msg, context_t
             context->next_param = ROYALTIES_VALUE;
             break;
         case ROYALTIES_VALUE:
-            if (context->tx.body.mint_and_transfer.royalties_qty ==
-                1) {  // Fix royalties values to only 1, the last one.
+            // Fix royalties values to only 1, the last one.
+            if (context->tx.body.mint_and_transfer.royalties_qty == 1) {
                 context->tx.body.mint_and_transfer.royalties =
                     U2BE(msg->parameter, PARAMETER_LENGTH - sizeof(uint16_t));
+
+                if(context->tx.body.mint_and_transfer.royalties > ROYALTY_MAX_VALUE){
+                    PRINTF("Royalties cannot be higher than %d\n", ROYALTY_MAX_VALUE);
+                    msg->result = ETH_PLUGIN_RESULT_ERROR;
+                    return;
+                }
             }
 
             context->tx.body.mint_and_transfer.royalties_qty--;
