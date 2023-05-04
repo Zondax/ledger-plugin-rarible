@@ -23,6 +23,8 @@
 #define NAME_MAX_LEN   PARAMETER_LENGTH
 #define SYMBOL_MAX_LEN PARAMETER_LENGTH
 
+#define ROYALTY_MAX_VALUE 10000
+
 // Enumeration of the different selectors possible.
 // Should follow the exact same order as the array declared in main.c
 typedef enum {
@@ -109,7 +111,6 @@ typedef enum {
     CONTRACT_URI,
     OPERATORS_QTY,
     OPERATORS_ADDRESS,
-    OPERATORS_VALUE,
 
     TRANSFER_PROXY_ADDRESS,
     LAZY_TRANSFER_PROXY_ADDRESS,
@@ -148,6 +149,7 @@ typedef struct {
             // For display.
             token_id_t id;
             address_t beneficiary;
+            bool creator_found;
             address_t creator;
             uint16_t royalties;
             // uint8_t signature[PARAMETER_LENGTH];
@@ -201,6 +203,7 @@ typedef struct {
 
         struct {
             // For display.
+            bool operator_found;
             address_t operator;
             name_t name;
             symbol_t symbol;

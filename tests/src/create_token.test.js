@@ -77,7 +77,7 @@ test.each(factoryNetworks)("%s - Create Token from Etherscan", async ({name, dev
         await waitForAppScreen(sim);
         // Navigate the display by pressing the right button 10 times, then pressing both buttons to accept the transaction.
         // EDIT THIS: modify `10` to fix the number of screens you are expecting to navigate through.
-        await sim.navigateAndCompareSnapshots('.', `${device}_${name}_create_token_from_etherscan`, [device === "nanos" ? 8 : 6, 0]);
+        await sim.navigateAndCompareSnapshots('.', `${device}_${name}_create_token_from_etherscan`, [device === "nanos" ? 6 : 6, 0]);
 
         await tx;
     })();
