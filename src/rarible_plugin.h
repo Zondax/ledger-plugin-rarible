@@ -197,7 +197,7 @@ typedef struct {
         struct {
             // For display.
             address_t to;
-            u_int8_t isApproved;
+            u_int16_t isApproved;
 
         } set_approval_for_all;
 

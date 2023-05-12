@@ -1,6 +1,6 @@
 #include "rarible_plugin.h"
 
-static void copy_text(uint8_t *dst, uint16_t dst_len, uint16_t max_len, uint8_t *src) {
+static void copy_text(uint8_t *dst, uint16_t dst_len, uint16_t max_len, const uint8_t *src) {
     size_t len = MIN(dst_len, max_len);
     memcpy(dst, src, len);
 }
