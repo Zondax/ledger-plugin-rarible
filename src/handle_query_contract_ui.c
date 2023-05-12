@@ -21,7 +21,7 @@ static void set_address_ui(ethQueryContractUI_t *msg, address_t *value) {
 }
 
 // Set UI for "IsApproved" screen.
-static void set_is_approved(ethQueryContractUI_t *msg, u_int8_t isApproved) {
+static void set_is_approved(ethQueryContractUI_t *msg, u_int16_t isApproved) {
     strlcpy(msg->title, "Approved", msg->titleLength);
 
     if (isApproved == 0) {
