@@ -47,6 +47,7 @@ static uint8_t parse_asset(ethPluginProvideParameter_t *msg, context_t *context)
             context->counter = decrement_counter(context->counter);
             // Once the entire asset data has been consumed, we are done.
             if (context->counter == 0) {
+                context->sub_param = UNEXPECTED_PARAMETER;
                 return 1;
             }
             return 0;
@@ -102,7 +103,6 @@ static void parse_order(ethPluginProvideParameter_t *msg,
         case TAKE_ASSET:
             if (parse_asset(msg, context) == 1) {
                 context->next_param = DATA_LENGTH;
-                context->sub_param = ASSET_TYPE_OFFSET;
             }
             break;
         case DATA_LENGTH:
