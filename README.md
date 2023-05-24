@@ -5,6 +5,10 @@
 This repo contains a ledger plugin for rarible smart contract on ethereum. It was built following
 this [guide](https://developers.ledger.com/docs/dapp/nano-plugin/overview/).
 
+## Project Status
+
+This repository is up-to-date with updates and modifications in this [commit](https://github.com/LedgerHQ/app-plugin-boilerplate/tree/3c9f5811dbaa7de4297af857786089f76d474eae) on the [Ledger Plugin Boilerplate](https://github.com/LedgerHQ/app-plugin-boilerplate) repository.
+
 ## Device support
 
 We are currently compiling and testing the plugin using zemu for Nano S, Nano S Plus and X devices.
