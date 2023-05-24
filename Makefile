@@ -34,9 +34,9 @@ APPVERSION       = "$(APPVERSION_M).$(APPVERSION_N).$(APPVERSION_P)"
 
 # EDIT THIS: Change the name of the gif, and generate you own GIFs!
 ifeq ($(TARGET_NAME), TARGET_NANOS)
-ICONNAME=icons/nanox_app_rarible.gif
-else
 ICONNAME=icons/nanos_app_rarible.gif
+else
+ICONNAME=icons/nanox_app_rarible.gif
 endif
 
 ################
