@@ -3,12 +3,14 @@ name: Compilation & tests
 on:
   push:
     branches:
-      - main
       - master
+      - main
+      - develop
   pull_request:
     branches:
       - main
       - master
+      - develop
 
 jobs:
   job_build_plugin_nano_s:
