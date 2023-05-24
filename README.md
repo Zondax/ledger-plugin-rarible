@@ -7,7 +7,7 @@ this [guide](https://developers.ledger.com/docs/dapp/nano-plugin/overview/).
 
 ## Project Status
 
-This repository is up-to-date with updates and modifications in this [commit](https://github.com/LedgerHQ/app-plugin-boilerplate/tree/3c9f5811dbaa7de4297af857786089f76d474eae) on the [Ledger Plugin Boilerplate](https://github.com/LedgerHQ/app-plugin-boilerplate) repository.
+This repository is up-to-date with updates and modifications in this [commit](https://github.com/LedgerHQ/app-plugin-boilerplate/tree/d1ba9630d2fba056e23852896315b4ecf53fb08b) on the [Ledger Plugin Boilerplate](https://github.com/LedgerHQ/app-plugin-boilerplate) repository.
 
 ## Device support
 
